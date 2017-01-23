@@ -68,6 +68,37 @@ app.post('/urls', (request, response) => {
   response.json(app.locals.db.urls.data);
 });
 
+app.get('/urls_db', (request, response) => {
+  const { longUrl } = request.body;
+  const id = shortid.generate();
+  const link = { id, longUrl, clicks: 0, timestamp: Date.now() };
+  app.locals.db.urls.data.push(link);
+
+  if (!longUrl) {
+    return response.status(422).send({
+      error: 'No url provided'
+    });
+  }
+
+  response.json(app.locals.db.urls.data);
+});
+
+app.post('/urls_db', (request, response) => {
+  const { longUrl } = request.body;
+  const id = shortid.generate();
+  const link = { id, longUrl, clicks: 0, timestamp: Date.now() };
+  app.locals.db.urls.data.push(link);
+
+  if (!longUrl) {
+    return response.status(422).send({
+      error: 'No url provided'
+    });
+  }
+
+  response.json(app.locals.db.urls.data);
+});
+
+
 if (!module.parent) {
   app.listen(app.get('port'), () => {
     console.log(`${app.locals.title} now listening on 3000`);
