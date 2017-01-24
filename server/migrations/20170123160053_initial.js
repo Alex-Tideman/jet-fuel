@@ -9,7 +9,7 @@ exports.up = function(knex, Promise) {
         }),
 
         knex.schema.createTable('urls', function(table){
-            table.increments('id').primary();
+            table.string('id').primary();
             table.string('long_url');
             table.integer('clicks');
             table.integer('folder_id')

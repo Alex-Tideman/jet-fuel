@@ -9,15 +9,10 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('port', process.env.PORT || 3000);
 app.locals.title = 'Tinyify';
-app.locals.db = {
-  urls: {
-    data: [
-      {id:"HkrRLh2Ge",longUrl:"https://www.google.com/", clicks: 5, timestamp: 1480556223476},
-      {id:"asdfjkl", longUrl:"http://frontend.turing.io", clicks: 11, timestamp: 1480556245673},
-      {id:"qwerty", longUrl:"http://www.nytimes.com", clicks: 6, timestamp: 1480556267588},
-    ]
-  }
-};
+
+const environment = process.env.NODE_ENV || 'development';
+const configuration = require('./knexfile')[environment];
+const database = require('knex')(configuration);
 
 app.get('/', (request, response) => {
   fs.readFile(`${__dirname}/index.html`, (err, file) => {
@@ -26,76 +21,40 @@ app.get('/', (request, response) => {
 });
 
 app.get('/urls', (request, response) => {
-  if (!app.locals.db.urls.data) {
-    return response.status(422).send({
-      error: 'No urls stored'
-    });
-  }
-
-  response.json(app.locals.db.urls.data);
-});
-
-app.get('/:id', (request, response) => {
-
-  app.locals.db.urls.data.forEach( (url) => {
-    if (url.id === request.params.id){
-      url.clicks++;
-      return url;
-    }
-  });
-
-  let thisLink = app.locals.db.urls.data.find( (url) => {
-    return url.id === request.params.id;
-  });
-
-  if(!thisLink) { return response.sendStatus(404); }
-
-  response.redirect(301, thisLink.longUrl);
+  database.select().table('urls')
+          .then(function(urls) {
+            console.log("Urls: ", urls)
+            response.status(200).json(urls);
+          })
+          .catch(function(error) {
+            console.error('somethings wrong with db')
+          });
 });
 
 app.post('/urls', (request, response) => {
   const { longUrl } = request.body;
   const id = shortid.generate();
-  const link = { id, longUrl, clicks: 0, timestamp: Date.now() };
-  app.locals.db.urls.data.push(link);
-
-  if (!longUrl) {
-    return response.status(422).send({
-      error: 'No url provided'
-    });
-  }
-
-  response.json(app.locals.db.urls.data);
+  const link = { id, long_url: longUrl, clicks: 0, created_at: Date.now() };
+  database('urls').insert(link)
+          .then(() => {})
+          .select().table('urls')
+          .then(function(urls) {
+            response.status(200).json(urls);
+          })
+          .catch(function(error) {
+            console.error('somethings wrong with db')
+          });
 });
 
-app.get('/urls_db', (request, response) => {
-  const { longUrl } = request.body;
-  const id = shortid.generate();
-  const link = { id, longUrl, clicks: 0 };
-  app.locals.db.urls.data.push(link);
-
-  if (!longUrl) {
-    return response.status(422).send({
-      error: 'No url provided'
-    });
-  }
-
-  response.json(app.locals.db.urls.data);
-});
-
-app.post('/urls_db', (request, response) => {
-  const { longUrl } = request.body;
-  const id = shortid.generate();
-  const link = { id, longUrl, clicks: 0, timestamp: Date.now() };
-  app.locals.db.urls.data.push(link);
-
-  if (!longUrl) {
-    return response.status(422).send({
-      error: 'No url provided'
-    });
-  }
-
-  response.json(app.locals.db.urls.data);
+app.get('/:id', (request, response) => {
+  database.select().table('urls')
+          .then(function(urls) {
+            console.log("Urls: ", urls)
+            response.status(200).json(urls);
+          })
+          .catch(function(error) {
+            console.error('somethings wrong with db')
+          });
 });
 
 
