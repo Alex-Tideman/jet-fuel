@@ -23,7 +23,7 @@ app.get('/', (request, response) => {
 app.get('/urls', (request, response) => {
   database.select().table('urls')
           .then(function(urls) {
-            console.log("Urls: ", urls)
+            // console.log("Urls: ", urls)
             response.status(200).json(urls);
           })
           .catch(function(error) {
@@ -34,26 +34,27 @@ app.get('/urls', (request, response) => {
 app.post('/urls', (request, response) => {
   const { longUrl } = request.body;
   const id = shortid.generate();
+  console.log("Creating url with id: ", id)
   const link = { id, long_url: longUrl, clicks: 0, created_at: Date.now() };
   database('urls').insert(link)
-          .then(() => {})
-          .select().table('urls')
-          .then(function(urls) {
-            response.status(200).json(urls);
-          })
-          .catch(function(error) {
-            console.error('somethings wrong with db')
-          });
+  .then(function() {
+    database('urls').select().table('urls')
+            .then(function(urls) {
+              response.status(200).json(urls);
+            })
+            .catch(function(error) {
+              console.error('somethings wrong with db')
+            });
+  })
 });
 
-app.get('/:id', (request, response) => {
-  database.select().table('urls')
-          .then(function(urls) {
-            console.log("Urls: ", urls)
-            response.status(200).json(urls);
+app.get('/urls/:id', (request, response) => {
+  database('urls').where('id', request.params.id).first()
+          .then(function(url) {
+            response.redirect(301, url.long_url);
           })
           .catch(function(error) {
-            console.error('somethings wrong with db')
+            console.error('somethings wrong with redirect')
           });
 });
 
