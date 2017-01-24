@@ -48,7 +48,7 @@ app.get('/:id', (request, response) => {
     return url.id === request.params.id;
   });
 
-  if(!thisLink.longUrl) { return response.sendStatus(404); }
+  if(!thisLink) { return response.sendStatus(404); }
 
   response.redirect(301, thisLink.longUrl);
 });
@@ -71,7 +71,7 @@ app.post('/urls', (request, response) => {
 app.get('/urls_db', (request, response) => {
   const { longUrl } = request.body;
   const id = shortid.generate();
-  const link = { id, longUrl, clicks: 0, timestamp: Date.now() };
+  const link = { id, longUrl, clicks: 0 };
   app.locals.db.urls.data.push(link);
 
   if (!longUrl) {
