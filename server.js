@@ -20,8 +20,44 @@ app.get('/', (request, response) => {
   });
 });
 
+app.get('/folders', (request, response) => {
+  database('folders').select()
+          .then(function(folders) {
+            // console.log("Urls: ", urls)
+            response.status(200).json(folders);
+          })
+          .catch(function(error) {
+            console.error('somethings wrong with db')
+          });
+});
+
+app.post('/folders', (request, response) => {
+  const { name } = request.body;
+  const folder = { name, created_at: Date.now() };
+  database('folders').insert(folder)
+  .then(function() {
+    database('folders').select()
+            .then(function(urls) {
+              response.status(200).json(urls);
+            })
+            .catch(function(error) {
+              console.error('somethings wrong with db')
+            });
+  })
+});
+
+app.get('/folders/:id', (request, response) => {
+  database('urls').where('folder_id', request.params.id).select()
+          .then(function(urls) {
+            response.status(200).json(urls);
+          })
+          .catch(function(error) {
+            console.error('somethings wrong with redirect')
+          });
+});
+
 app.get('/urls', (request, response) => {
-  database.select().table('urls')
+  database('urls').select()
           .then(function(urls) {
             // console.log("Urls: ", urls)
             response.status(200).json(urls);
@@ -38,7 +74,7 @@ app.post('/urls', (request, response) => {
   const link = { id, long_url: longUrl, clicks: 0, created_at: Date.now() };
   database('urls').insert(link)
   .then(function() {
-    database('urls').select().table('urls')
+    database('urls').select()
             .then(function(urls) {
               response.status(200).json(urls);
             })
